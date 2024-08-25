@@ -56,6 +56,14 @@
     const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notification/{{room_name}}/`;
     const socket = new WebSocket(wsEndpoint);
 
+    socket.onopen = (event) => {
+        console.log("WebSocket connection opened!");
+    };
+
+    socket.onclose = (event) => {
+        console.log("WebSocket connection closed!");
+    };
+
     document.getElementById('message-form').addEventListener('submit', function(event){
         event.preventDefault();
         const message = document.getElementById('msg').value;
@@ -77,7 +85,7 @@
         var message = messageData['message'];
 
         // empty message input field after message has been sent
-        if (sender == {{user}}){
+        if (sender == '{{user}}'){
             document.getElementById('msg').value = '';
         }
 
