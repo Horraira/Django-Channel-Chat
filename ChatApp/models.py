@@ -14,6 +14,11 @@ class Message(models.Model):
     message = models.TextField()
 
     def __str__(self):
-        return self.room
+        return f'{self.sender}: {self.message}'
     
+class Notification(models.Model):
+    message = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.message
 
