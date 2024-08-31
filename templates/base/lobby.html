@@ -42,7 +42,7 @@
         let room = e.target.room.value.toUpperCase()
         let name = e.target.name.value
 
-        let response = await fetch(`/get_token/?channel=${room}`)
+        let response = await fetch(`/video/get_token/?channel=${room}`)
         let data = await response.json()
 
         let UID = data.uid
@@ -53,10 +53,8 @@
         sessionStorage.setItem('room', room)
         sessionStorage.setItem('name', name)
 
-        window.open('/room/', '_self')
+        window.open('/video/room/', '_self')
     }
-
-
 
     form.addEventListener('submit', handleSubmit)
 </script>
