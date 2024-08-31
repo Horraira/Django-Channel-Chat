@@ -43,17 +43,22 @@ def create_user(request):
 def get_members(request):
     uid = request.GET.get('uid')
     room_name = request.GET.get('room_name')
-    member = RoomMember.objects.get(room_name=room_name, uid=uid)
+    try:
+        member = RoomMember.objects.filter(room_name=room_name).exclude(uid=uid)
+    except RoomMember.DoesNotExist:
+        return JsonResponse('No members found', safe=False)
     return JsonResponse({'name':member.name}, safe=False)
 
 @csrf_exempt
 def delete_member(request):
     data = json.loads(request.body)
-
-    member = RoomMember.objects.get(
-        room_name=data['room_name'], 
-        uid=data['uid'],
-        name=data['name']
-        )
-    member.delete()
+    try:
+        member = RoomMember.objects.get(
+            room_name=data['room_name'], 
+            uid=data['uid'],
+            name=data['name']
+            )
+        member.delete()
+    except RoomMember.DoesNotExist:
+        return JsonResponse('Member does not exist', safe=False)
     return JsonResponse('Member was deleted', safe=False)

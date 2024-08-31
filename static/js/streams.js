@@ -139,6 +139,11 @@ let deleteMember = async () => {
             'room_name': CHANNEL,
         })
     });
+
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('room');
+    sessionStorage.removeItem('UID');
+    sessionStorage.removeItem('name');
 }
 
 joiAndDisplayLocalStream()
