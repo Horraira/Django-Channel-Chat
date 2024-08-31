@@ -44,10 +44,10 @@ def get_members(request):
     uid = request.GET.get('uid')
     room_name = request.GET.get('room_name')
     try:
-        member = RoomMember.objects.filter(room_name=room_name).exclude(uid=uid)
+        member = RoomMember.objects.get(uid=uid, room_name=room_name)
+        return JsonResponse({'name':member.name}, safe=False)
     except RoomMember.DoesNotExist:
         return JsonResponse('No members found', safe=False)
-    return JsonResponse({'name':member.name}, safe=False)
 
 @csrf_exempt
 def delete_member(request):
