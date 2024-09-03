@@ -40,7 +40,7 @@
                         <form action="" id="message-form" method="POST">
                             {% csrf_token %}
                             <textarea id="msg" cols="30" name="message" rows="10" placeholder="Enter your message" required></textarea>
-                            <input style="padding-left: 5px;" type="file" name="file">
+                            <input id="file" style="padding-left: 5px;" type="file" name="file">
                             <button class="submit" type="submit">Send</button>
                         </form>    
                     </div>
@@ -70,13 +70,44 @@
     document.getElementById('message-form').addEventListener('submit', function(event){
         event.preventDefault();
         const message = document.getElementById('msg').value;
+        const fileInput = document.getElementById('file');
+        const file = fileInput.files[0];
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const fileData = event.target.result;
+            socket.send(JSON.stringify({
+                'message': message,
+                'file': {
+                    'name': file.name,
+                    'data': Array.from(new Uint8Array(fileData)), 
+                    'type': file.type,
+                },
+                'room_name': '{{room_name}}',
+                'sender': '{{user}}',
+            }));
+        };
+        if (file) {
+            reader.readAsArrayBuffer(file);
+        } else {
+            socket.send(JSON.stringify({
+                'message': message,
+                'file': null,
+                'room_name': '{{room_name}}',
+                'sender': '{{user}}',
+            }));
+        }
+
+        /*
         socket.send(
             JSON.stringify({
                 'message': message,
+                'file': fileData,
                 'room_name': '{{room_name}}',
                 'sender': '{{user}}',
             })
         )
+            */
     });
 
     function getFormattedTime() {
