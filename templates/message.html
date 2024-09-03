@@ -24,10 +24,12 @@
                             {% if i.sender != user %}
                                 <div class="receive">
                                     <p style="color: #000;"> {{i.message}}<strong>-{{i.sender}}</strong></p>
+                                    <b>{{ i.timestamp|date:"d F H:i:s" }}</b>
                                 </div>
                             {% else %}
                                 <div class="send">
                                     <p style="color: #000;">{{i.message}}</p>
+                                    <b>{{ i.timestamp|date:"d F H:i:s" }}</b>
                                 </div>
                             {% endif %}
                         {% endfor %}
@@ -38,6 +40,7 @@
                         <form action="" id="message-form" method="POST">
                             {% csrf_token %}
                             <textarea id="msg" cols="30" name="message" rows="10" placeholder="Enter your message" required></textarea>
+                            <input style="padding-left: 5px;" type="file" name="file">
                             <button class="submit" type="submit">Send</button>
                         </form>    
                     </div>
@@ -76,13 +79,29 @@
         )
     });
 
+    function getFormattedTime() {
+        const now = new Date();
+    
+        const day = now.toLocaleDateString('en-US', { day: '2-digit' });
+        const month = now.toLocaleDateString('en-US', { month: 'long' });
+    
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+    
+        // Pad hours to ensure two digits
+        const formattedHours = hours.toString().padStart(2, '0');
+    
+        return `${day} ${month} ${formattedHours}:${minutes}:${seconds}`;
+    }
+
     // response from consumer on server
     socket.addEventListener("message", (event) => {
         const messageData = JSON.parse(event.data)['message'];
-        console.log(messageData);
         
         var sender = messageData['sender'];
         var message = messageData['message'];
+        var time = getFormattedTime();
 
         // empty message input field after message has been sent
         if (sender == '{{user}}'){
@@ -92,9 +111,9 @@
         // Here's where we append the message to the chatbox.
         var messageDiv = document.querySelector('.message');
         if (sender != '{{user}}') { // assuming you have a variable `currentUser` to hold the current user's name
-            messageDiv.innerHTML += '<div class="receive"><p style="color: #000;">' + message + '<strong>-' + sender + '</strong></p></div>';
+            messageDiv.innerHTML += '<div class="receive"><p style="color: #000;">' + message + '<strong>-' + sender + '</strong><b>' + time + '</b></div>';
         } else {
-            messageDiv.innerHTML += '<div class="send"><p style="color: #000;">' + message + '</p></div>';
+            messageDiv.innerHTML += '<div class="send"><p style="color: #000;">' + message + '</p><b>' + time + '</b></div>';
         }
         scrollToBottom();
 

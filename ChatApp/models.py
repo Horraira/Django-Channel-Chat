@@ -11,7 +11,9 @@ class Room(models.Model):
 class Message(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     sender = models.CharField(max_length=100)
-    message = models.TextField()
+    message = models.TextField(blank=True)
+    file = models.FileField(upload_to='files/', null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.sender}: {self.message}'
