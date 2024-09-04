@@ -22,6 +22,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data = json.loads(text_data)
         file_data = text_data.get('file', None)
+        print('called receive')
 
         # Convert file data back to ContentFile
         if file_data:
@@ -31,54 +32,50 @@ class ChatConsumer(AsyncWebsocketConsumer):
         else:
             file = None
         
-        message = {
+        # Save the message to the database (only by the sender)
+        message_data = await self.create_message({
             'message': text_data['message'],
             'file': file,
             'sender': text_data['sender'],
             'room_name': text_data['room_name']
-        }
+        })
 
+        # Broadcast the message to the group
         event = {
             'type': 'send_message',
-            'message': message,
+            'message': {
+                'message': text_data['message'],
+                'file_url': message_data['file_url'],  
+                'sender': text_data['sender'],
+                'room_name': text_data['room_name']
+            },
         }
-
         await self.channel_layer.group_send(self.room_name, event)
 
     async def send_message(self, event):
         data = event['message']
-        message_data= await self.create_message(data=data)
+
         response_data = {
             'sender': data['sender'],
             'message': data['message'],
-            'file_url': message_data['file_url']
+            'file_url': data['file_url']  # File URL from the sender's save operation
         }
+
+        # Send the message to the WebSocket
         await self.send(text_data=json.dumps({'message': response_data}))
 
     @database_sync_to_async
     def create_message(self, data):
-        get_room_by_name = Room.objects.get(room_name=data['room_name'])
+        room = Room.objects.get(room_name=data['room_name'])
         file = data['file']
-        if file:
-            message = Message.objects.create(
-                    room=get_room_by_name,
-                    sender=data['sender'],
-                    message=data['message'],
-                    file=file
-                )
-        else:
-            message = Message.objects.create(
-                    room=get_room_by_name,
-                    sender=data['sender'],
-                    message=data['message'],
-                    file=None
-                )
-
-        file_url = message.file.url if message.file else None
+        message_instance = Message.objects.create(
+            room=room,
+            sender=data['sender'],
+            message=data['message'],
+            file=file
+        )
         return {
-            'sender': message.sender,
-            'message': message.message,
-            'file_url': file_url
+            'file_url': message_instance.file.url if file else None
         }
 
 
