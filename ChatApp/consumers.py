@@ -1,7 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from ChatApp.models import *
+from ChatApp.models import Room, Message
 
 
 import base64
@@ -22,8 +22,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data = json.loads(text_data)
         file_data = text_data.get('file', None)
-
-        print(text_data, text_data['room_name'])
 
         # Convert file data back to ContentFile
         if file_data:
@@ -49,7 +47,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def send_message(self, event):
         data = event['message']
-        print(data)
         await self.create_message(data=data)
         response_data = {
             'sender': data['sender'],
