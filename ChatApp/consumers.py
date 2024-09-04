@@ -22,7 +22,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data = json.loads(text_data)
         file_data = text_data.get('file', None)
-        print('called receive')
 
         # Convert file data back to ContentFile
         if file_data:

@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Messages</title>
     
-    <title>Messages</title>
-    <!-- load static -->
-    {% load static %}
-    <!-- link to h=css file -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-</head>
+        <!-- Load the Emoji Button library -->
+        <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@3.0.3/dist/index.min.js"></script>
+        
+        <!-- Your existing scripts and styles -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    </head>
+    
 <body>
     <div class="parent">
         <div class="child-2">
@@ -22,7 +24,7 @@
                         {% for i in messages %}
                             {% if i.sender != user %}
                                 <div class="receive">
-                                    <p style="color: #000;"> {{i.message}}<strong>-{{i.sender}}</strong></p>
+                                    <p style="color: #000;"> {{i.message}}<strong> -{{i.sender}}</strong></p>
                                     {% if i.file %}
                                     <img src="{{i.file.url}}" alt="Description" width="150" height="100">
                                     <br>
@@ -31,7 +33,7 @@
                                 </div>
                             {% else %}
                                 <div class="send">
-                                    <p style="color: #000;">{{i.message}}</p>
+                                    <p style="color: #000;">{{i.message}}<strong> -{{i.sender}}</strong></p>
                                     {% if i.file %}
                                     <img src="{{i.file.url}}" alt="Description" width="150" height="100">
                                     <br>
@@ -46,8 +48,11 @@
                     <div class="form">
                         <form action="" id="message-form" method="POST">
                             {% csrf_token %}
-                            <textarea id="msg" cols="30" name="message" rows="10" placeholder="Enter your message" required></textarea>
-                            <div style="display=flex;margin-top: 10px;width: 70%;">
+                            <div style="display: flex; align-items: center;">
+                                <textarea id="msg" cols="30" name="message" rows="10" placeholder="Enter your message" required></textarea>
+                                <button type="button" id="emoji-button" style="margin-left: 10px;">😊</button>
+                            </div>
+                            <div style="display: flex; align-items: center; margin-top: 10px; width: 70%;">
                                 <label for="file">Choose file</label>
                                 <input id="file" type="file" name="file">
                                 <button class="submit" type="submit">Send</button>
@@ -142,7 +147,7 @@
 
         // Append the message to the chatbox
         var messageDiv = document.querySelector('.message');
-        var newMessage = '<p style="color: #000;">' + message + '</p>';
+        var newMessage = '<p style="color: #000;">' + message + '<strong> -' + sender + '</strong></p>';
         
         // Add file preview if a file URL exists
         if (file_url) {
@@ -150,13 +155,33 @@
         }
 
         if (sender != '{{user}}') {
-            messageDiv.innerHTML += '<div class="receive">' + newMessage + '<strong>-' + sender + '</strong><b>' + time + '</b></div>';
+            messageDiv.innerHTML += '<div class="receive">' + newMessage + '<b>' + time + '</b></div>';
         } else {
             messageDiv.innerHTML += '<div class="send">' + newMessage + '<b>' + time + '</b></div>';
         }
 
         scrollToBottom();
 
+    });
+
+    // Initialize the emoji picker
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Emoji Button
+        const picker = new EmojiButton();
+
+        // Reference to the emoji button and textarea
+        const emojiButton = document.querySelector('#emoji-button');
+        const textarea = document.querySelector('#msg');
+
+        // Toggle the emoji picker when the emoji button is clicked
+        emojiButton.addEventListener('click', () => {
+            picker.togglePicker(emojiButton);
+        });
+
+        // When an emoji is selected, insert it into the textarea
+        picker.on('emoji', emoji => {
+            textarea.value += emoji;
+        });
     });
 
     socket.onopen = (event) => {
@@ -345,6 +370,14 @@
         .message .send {
             max-width: 80%;
         }
+    }
+
+    #emoji-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 5px;
     }
     
 
