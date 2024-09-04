@@ -128,6 +128,7 @@
         
         var sender = messageData['sender'];
         var message = messageData['message'];
+        var file_url = messageData['file_url'];
         var time = getFormattedTime();
 
         // empty message input field after message has been sent
@@ -136,13 +137,21 @@
             document.getElementById('file').value = '';
         }
 
-        // Here's where we append the message to the chatbox.
+        // Append the message to the chatbox
         var messageDiv = document.querySelector('.message');
-        if (sender != '{{user}}') { // assuming you have a variable `currentUser` to hold the current user's name
-            messageDiv.innerHTML += '<div class="receive"><p style="color: #000;">' + message + '<strong>-' + sender + '</strong><b>' + time + '</b></div>';
-        } else {
-            messageDiv.innerHTML += '<div class="send"><p style="color: #000;">' + message + '</p><b>' + time + '</b></div>';
+        var newMessage = '<p style="color: #000;">' + message + '</p>';
+        
+        // Add file preview if a file URL exists
+        if (file_url) {
+            newMessage += '<img src="' + file_url + '" alt="Image" width="150" height="100"><br>';
         }
+
+        if (sender != '{{user}}') {
+            messageDiv.innerHTML += '<div class="receive">' + newMessage + '<strong>-' + sender + '</strong><b>' + time + '</b></div>';
+        } else {
+            messageDiv.innerHTML += '<div class="send">' + newMessage + '<b>' + time + '</b></div>';
+        }
+
         scrollToBottom();
 
     });

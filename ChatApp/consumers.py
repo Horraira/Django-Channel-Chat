@@ -47,10 +47,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def send_message(self, event):
         data = event['message']
-        await self.create_message(data=data)
+        message_data= await self.create_message(data=data)
         response_data = {
             'sender': data['sender'],
-            'message': data['message']
+            'message': data['message'],
+            'file_url': message_data['file_url']
         }
         await self.send(text_data=json.dumps({'message': response_data}))
 
@@ -59,19 +60,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
         get_room_by_name = Room.objects.get(room_name=data['room_name'])
         file = data['file']
         if file:
-            Message.objects.create(
-                room=get_room_by_name,
-                sender=data['sender'],
-                message=data['message'],
-                file=file
-            )
+            message = Message.objects.create(
+                    room=get_room_by_name,
+                    sender=data['sender'],
+                    message=data['message'],
+                    file=file
+                )
         else:
-            Message.objects.create(
-                room=get_room_by_name,
-                sender=data['sender'],
-                message=data['message'],
-                file=None
-            )
+            message = Message.objects.create(
+                    room=get_room_by_name,
+                    sender=data['sender'],
+                    message=data['message'],
+                    file=None
+                )
+
+        file_url = message.file.url if message.file else None
+        return {
+            'sender': message.sender,
+            'message': message.message,
+            'file_url': file_url
+        }
 
 
 class NotificationConsumer(AsyncWebsocketConsumer):
