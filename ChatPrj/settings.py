@@ -1,4 +1,5 @@
 from pathlib import Path
+import stripe
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ChatApp',
     'channels',
+    'Stripe',
     'base',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -104,3 +107,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CSRF_TRUSTED_ORIGINS = [
     'https://1a06-103-197-153-49.ngrok-free.app',  
 ]
+
+
+STRIPE_SECRET_KEY = 'sk_test_51Q2rvAP8hxrrVp0fbs34XLeYMuooq4b3nTE4jsJxCOO3As9YSb1BLrYrblghBTQH5EpNH6a6nBAy18aeMYc3fpOK00mD0iAkKx'
+STRIPE_PUBLISHABLE_KEY = 'pk_test_51Q2rvAP8hxrrVp0fZ0miWIgQqDyMmPNxo1awO0h5iT3updslnKb2ejhY31innIjYCXrYAY43ZhYHJmov9POtyuxO0082u98uMY'
+
+stripe.api_key = STRIPE_SECRET_KEY

@@ -7,6 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('chat', include('ChatApp.urls')),
     path('video/', include('base.urls')),
+    path('stripe/', include('Stripe.urls')),
 ]
 
 if settings.DEBUG:
