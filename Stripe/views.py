@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.http import JsonResponse
 
 import stripe
 from ChatPrj import settings
@@ -52,26 +53,20 @@ class CreatePaymentIntentView(generics.GenericAPIView):
 
 
 class ConfirmPaymentView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        amount = request.data.get('payment_id')
+        amount = int(float(amount) * 100)  # Convert to cents
+        intent = stripe.PaymentIntent.create(
+            amount= amount,
+            currency='usd',
+            automatic_payment_methods={
+                'enabled': True,
+            },
+        )
 
-    def post(self, request, payment_intent_id):
-        # Confirm the payment intent
-        intent = stripe.PaymentIntent.confirm(payment_intent_id)
-
-        # Update the status in the database
-        payment_intent = PaymentIntent.objects.get(stripe_payment_intent_id=payment_intent_id)
-        payment_intent.status = intent['status']
-        payment_intent.save()
-
-        if intent['status'] == 'succeeded':
-            # Save payment history
-            PaymentHistory.objects.create(
-                user=request.user,
-                amount=payment_intent.amount,
-                stripe_payment_intent_id=payment_intent.stripe_payment_intent_id
-            )
-
-        return Response({'status': intent['status']}, status=status.HTTP_200_OK)
+        return Response({'clientSecret': intent['client_secret'],
+                        'dpmCheckerLink': f"https://dashboard.stripe.com/settings/payment_methods/review?transaction_id={intent['id']}"}, 
+                        status=status.HTTP_200_OK)
 
 
 class PreviousPaymentDetailsView(generics.GenericAPIView):
@@ -87,50 +82,25 @@ class PreviousPaymentDetailsView(generics.GenericAPIView):
         return Response({"detail": "No previous payments found."}, status=status.HTTP_404_NOT_FOUND)
 
 def create_payment(request, amount):
-    # Create a Stripe PaymentIntent
-    payment_intent = stripe.PaymentIntent.create(
-        amount=int(amount * 100),  # amount in cents
-        currency='usd',
-        automatic_payment_methods={
-            'enabled': True,
-            'allow_redirects': 'never',
-            },
-    )
+
     payment = Payment.objects.create(
         amount=amount,
-        stripe_payment_intent_id=payment_intent['id']
+        stripe_payment_intent_id= "pi_1JQ5ZvKXr6c3oJ9Z6Z6Z6Z6Z",
     )
-
     # Generate QR code with payment link
-    payment_url = f"{request.build_absolute_uri('/payments/confirm/')}{payment.id}"
+    payment_url = f"{request.build_absolute_uri('/stripe/payment/')}{payment.id}"
     qr = qrcode.make(payment_url)
     response = HttpResponse(content_type="image/png")
     qr.save(response, "PNG")
     return response
 
-
 @csrf_exempt
 def confirm_payment(request, payment_id):
-    payment = get_object_or_404(Payment, id=payment_id)
-    return render(request, 'payment/confirm_payment.html', {'payment': payment})
+    return render(request, 'payment/checkout.html', {'payment_id': payment_id})
 
-@csrf_exempt
-def process_payment(request, payment_id):
-    payment = get_object_or_404(Payment, id=payment_id)
-    try:
-        # Confirm the payment with the required parameters for automatic payment methods
-        stripe.PaymentIntent.confirm(
-            payment.stripe_payment_intent_id
-        )
-        payment.status = 'Completed'
-    except stripe.error.CardError:
-        payment.status = 'Failed'
-    except stripe.error.InvalidRequestError as e:
-        # Handle specific Stripe errors
-        print(f"Stripe Error: {e}")
-        payment.status = 'Failed'
-    payment.save()
-    return redirect('Stripe:confirm_payment', payment_id=payment_id)
+def payment_page(request):
+    return render(request, 'payment/complete.html')
 
 
-
+# mahep54368@rinseart.com
+# t8_4%XN2q7LV_qA
